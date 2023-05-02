@@ -27,10 +27,10 @@ import java.util.PriorityQueue;
 
 public class TensorFlowImageClassifier implements Classifier {
 
-    private static final int MAX_RESULTS = 3;
+    private static final int MAX_RESULTS = 1;
     private static final int BATCH_SIZE = 1;
     private static final int PIXEL_SIZE = 3;
-    private static final float THRESHOLD = 0.1f;
+    private static final float THRESHOLD = 0.5f;
 
     private static final int IMAGE_MEAN = 128;
     private static final float IMAGE_STD = 128.0f;

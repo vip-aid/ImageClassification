@@ -34,6 +34,9 @@ import android.widget.TextView;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import android.speech.tts.TextToSpeech;
+import java.util.Locale;
+
 
 public class MainActivity extends AppCompatActivity {
     private Detector detector;
@@ -58,6 +61,9 @@ public class MainActivity extends AppCompatActivity {
 
     private Classifier classifier;
 
+    // Text to speech code
+    private TextToSpeech mTTS;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +75,24 @@ public class MainActivity extends AppCompatActivity {
         btnToggleCamera = findViewById(R.id.btnToggleCamera);
         btnDetectObject = findViewById(R.id.btnDetectObject);
         initTensorFlowAndLoadModel();
+
+        mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+
+                if (status == TextToSpeech.SUCCESS)
+                {
+                   int result =  mTTS.setLanguage(Locale.ENGLISH);
+                   if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)
+                   {
+                       Log.e("TTS", "Language not supported on the device");
+                   }}
+                else
+                {
+                    Log.e("TTS", "Text to speech is not initialised");
+                }
+            }
+        });
 
 //
 
@@ -96,7 +120,13 @@ public class MainActivity extends AppCompatActivity {
         imageViewResult.setImageBitmap(bitmap);
 //
         final List<Classifier.Recognition> results = classifier.recognizeImage(bitmap);
-        textViewResult.setText(results.toString());
+        if (results.size() >0) {
+            textViewResult.setText(results.get(0).getTitle().toString());
+            if (!results.get(0).getTitle().toString().equals("Background")) {
+                speak(results.get(0).getTitle().toString());
+            }
+        }
+//        Classifier.Recognition id = results.get(0);
 
 
         //TODO make bitmap mutable and get canvas to draw rectangles
@@ -142,6 +172,14 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+    private void speak(String text)
+    {
+        mTTS.setPitch(0.7F);
+        mTTS.setSpeechRate(0.3F);
+        mTTS.speak(text, TextToSpeech.QUEUE_ADD, null);
+    }
+
+
     @Override
         protected void onResume() {
             super.onResume();
@@ -153,6 +191,15 @@ public class MainActivity extends AppCompatActivity {
             super.onPause();
             stopReceivingImages();
         }
+//        @Override
+//        protected void onDestroy() {
+//
+//            if (mTTS != null) {
+//                mTTS.stop();
+//                mTTS.shutdown();
+//            }
+//            super.onDestroy();
+//        }
 
         private void startReceivingImages() {
             if (!mIsReceivingImages) {
